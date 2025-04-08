@@ -77,11 +77,11 @@
 <body>
 
   <h1>UCHIHA EMPIRE</h1>
-  <h2>Gmail Spoofing Tool</h2>
-  <p>Just enter any Gmail and get spoofed result!</p>
+  <h2>Gmail Spoofing Tool (No API)</h2>
+  <p>Enter any Gmail and get 50+ spoofed versions!</p>
 
   <input type="text" id="gmail" placeholder="example@gmail.com">
-  <button onclick="fetchSpoof()">Get Spoof</button>
+  <button onclick="generateSpoof()">Get Spoof</button>
 
   <div id="output" style="display:none;">
     <button class="copy-btn" onclick="copyResult()">Copy Gmail</button>
@@ -91,22 +91,56 @@
   <div class="footer">Made with ❤️ by MR ZUYAN TEAM - UCHIHA EMPIRE</div>
 
   <script>
-    function fetchSpoof() {
+    function validateEmail(email) {
+      return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
+    }
+
+    function generateVariations(local, domain, count = 50) {
+      const variations = new Set();
+      const length = local.length;
+
+      while (variations.size < count) {
+        let modified = local;
+        const positions = [];
+
+        while (positions.length < Math.floor(Math.random() * 3) + 1) {
+          const pos = Math.floor(Math.random() * (length - 1)) + 1;
+          if (!positions.includes(pos)) positions.push(pos);
+        }
+
+        positions.sort((a, b) => b - a);
+        for (let pos of positions) {
+          modified = modified.slice(0, pos) + '.' + modified.slice(pos);
+        }
+
+        variations.add(modified + '@' + domain);
+      }
+
+      return Array.from(variations);
+    }
+
+    function generateSpoof() {
       const gmail = document.getElementById('gmail').value.trim();
       if (!gmail) return alert("Please enter a Gmail!");
 
-      const url = `http://zuyan.rf.gd/spoof.php?gmail=${encodeURIComponent(gmail)}&i=1`;
+      if (!validateEmail(gmail)) {
+        alert("Invalid Gmail address!");
+        return;
+      }
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('resultText').innerText = JSON.stringify(data, null, 2);
-          document.getElementById('output').style.display = 'block';
-        })
-        .catch(err => {
-          document.getElementById('resultText').innerText = "Error fetching spoof data!";
-          document.getElementById('output').style.display = 'block';
-        });
+      const [local, domain] = gmail.split('@');
+      const clones = generateVariations(local, domain);
+
+      const result = {
+        status: "success",
+        original: gmail,
+        total_clones: clones.length,
+        clones: clones,
+        author: "MR ZUYAN TEAM UCHIHA EMPIRE"
+      };
+
+      document.getElementById('resultText').innerText = JSON.stringify(result, null, 2);
+      document.getElementById('output').style.display = 'block';
     }
 
     function copyResult() {
